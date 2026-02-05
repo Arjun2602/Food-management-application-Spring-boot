@@ -11,25 +11,25 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/foods")
+@RequestMapping("/foods")
 public class FoodController {
 
     @Autowired
     private FoodService foodService;
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<?> saveFood(@RequestBody @Valid FoodDto foodDto){
         foodService.addFood(foodDto);
         return ResponseEntity.ok().body("Body created");
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<?> updateFood(@RequestBody FoodDto foodDto, @PathVariable String id){
         foodService.updateFood(foodDto, id);
         return ResponseEntity.ok().body("Updated");
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public void deleteFood(@PathVariable String id){
         foodService.deleteFood(id);
     }

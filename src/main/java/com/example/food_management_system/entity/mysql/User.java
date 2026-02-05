@@ -1,9 +1,11 @@
 package com.example.food_management_system.entity.mysql;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
 
@@ -19,9 +21,11 @@ public class User {
     private String firstName;
     private String lastName;
     private String email;
+    @Column(nullable = false, unique = true)
     private String userName;
     private String password;
     private String role;
+    @CreationTimestamp
     private Date created_date;
 
 

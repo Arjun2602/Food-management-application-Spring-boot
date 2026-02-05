@@ -1,13 +1,20 @@
 package com.example.food_management_system.services;
 
-import com.example.food_management_system.dto.UserDto;
+import com.example.food_management_system.dto.UserRequestDto;
+import com.example.food_management_system.dto.UserResponseDto;
 import com.example.food_management_system.entity.mysql.User;
+import com.example.food_management_system.exception.DuplicateResourceException;
 import com.example.food_management_system.exception.ResourceNotFountException;
 import com.example.food_management_system.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -15,33 +22,51 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User addUser(UserDto userDto){
-        User user = new User();
 
-        user.setId(userDto.getId());
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setEmail(userDto.getEmail());
-        user.setUserName(userDto.getUserName());
-        user.setPassword(userDto.getPassword());
-        user.setRole(userDto.getRole());
-        user.setCreated_date(userDto.getCreated_date());
-        return userRepository.save(user);
+    BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
+    public UserResponseDto convertToUserResponseDto(User user){
+        UserResponseDto userResponseDto = new UserResponseDto();
+
+        userResponseDto.setId(user.getId());
+        userResponseDto.setFirstName(user.getFirstName());
+        userResponseDto.setLastName(user.getLastName());
+        userResponseDto.setEmail(user.getEmail());
+        userResponseDto.setUserName(user.getUserName());
+        userResponseDto.setRole(user.getRole());
+        userResponseDto.setCreated_date(user.getCreated_date());
+        return userResponseDto;
+    }
+    public UserResponseDto addUser(UserRequestDto userRequestDto){
+        User user = new User();
+        user.setId(userRequestDto.getId());
+        user.setFirstName(userRequestDto.getFirstName());
+        user.setLastName(userRequestDto.getLastName());
+        user.setEmail(userRequestDto.getEmail());
+        user.setUserName(userRequestDto.getUserName());
+        user.setPassword(bCryptPasswordEncoder.encode(userRequestDto.getPassword()));
+        user.setRole(userRequestDto.getRole());
+
+        try{
+            User savedUser = userRepository.save(user);
+            return convertToUserResponseDto(savedUser);
+        }catch (DataIntegrityViolationException e){
+            throw new DuplicateResourceException("Username already exist!");
+        }
+
     }
 
-    public User updateUser(Long id, UserDto userDto){
+    public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto){
         User user = userRepository.findById(id).orElseThrow(()->new ResourceNotFountException("User not fount with this "+ id));
 
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setEmail(userDto.getEmail());
-        user.setUserName(userDto.getUserName());
-        user.setPassword(userDto.getPassword());
-        user.setRole(userDto.getRole());
-        user.setCreated_date(userDto.getCreated_date());
-        //user.setId(userDto.getId());
+        user.setFirstName(userRequestDto.getFirstName());
+        user.setLastName(userRequestDto.getLastName());
+        user.setEmail(userRequestDto.getEmail());
+        user.setUserName(userRequestDto.getUserName());
+        user.setPassword(bCryptPasswordEncoder.encode(userRequestDto.getPassword()));
+        user.setRole(userRequestDto.getRole());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return convertToUserResponseDto(savedUser);
     }
 
     public void deleteUser(Long id){
@@ -49,8 +74,9 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    public List<User> getAllUsers(){
-        return userRepository.findAll();
+    public List<UserResponseDto> getAllUsers(){
+        List<UserResponseDto> userResponseDtoList = userRepository.findAll().stream().map(this::convertToUserResponseDto).collect(Collectors.toList());
+        return userResponseDtoList;
     }
 
     public User getUserById(Long id){
