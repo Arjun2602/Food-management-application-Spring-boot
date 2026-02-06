@@ -1,15 +1,19 @@
 package com.example.food_management_system.services;
 
-import com.example.food_management_system.dto.FoodDto;
+import com.example.food_management_system.dto.FoodRequestDto;
+import com.example.food_management_system.dto.FoodResponseDto;
 import com.example.food_management_system.entity.mongodb.Food;
 import com.example.food_management_system.exception.ResourceNotFountException;
 import com.example.food_management_system.repository.mongodb.FoodRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.function.EntityResponse;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class FoodService {
@@ -17,58 +21,60 @@ public class FoodService {
     @Autowired
     private FoodRepository foodRepository;
 
-    public void addFood(FoodDto foodDto){
+    public FoodResponseDto convertToResponseFoodDto(Food food){
+        FoodResponseDto foodResponseDto = new FoodResponseDto();
+        foodResponseDto.setId(food.getId());
+        foodResponseDto.setName(food.getName());
+        foodResponseDto.setDescription(food.getDescription());
+        foodResponseDto.setCategory(food.getCategory());
+        foodResponseDto.setCreated_date(food.getCreated_date());
+        foodResponseDto.setPrice(food.getPrice());
+        foodResponseDto.setImage(food.getImage());
+        return foodResponseDto;
+    }
+
+    public FoodResponseDto addFood(FoodRequestDto foodRequestDto){
         Food food = new Food();
 
-        food.setName(foodDto.getName());
-        food.setDescription(foodDto.getDescription());
-        food.setCategory(foodDto.getCategory());
-        food.setPrice(foodDto.getPrice());
-        food.setImage(foodDto.getImage());
-        food.setCreated_date(foodDto.getCreated_date());
+        food.setName(foodRequestDto.getName());
+        food.setDescription(foodRequestDto.getDescription());
+        food.setCategory(foodRequestDto.getCategory());
+        food.setPrice(foodRequestDto.getPrice());
+        food.setImage(foodRequestDto.getImage());
 
-        foodRepository.save(food);
+        Food savedFood = foodRepository.save(food);
+
+        return convertToResponseFoodDto(savedFood);
     }
 
-    public void updateFood(FoodDto foodDto, String id){
-        Food food = foodRepository.findById(id).orElseThrow(()->new ResourceNotFountException("Food is not found for "+ id));
+    public FoodResponseDto updateFood(FoodRequestDto foodRequestDto, String id){
+        Food food = foodRepository.findById(id).orElseThrow(()->new ResourceNotFountException("Food is not found for id: "+ id));
 
-        food.setCreated_date(foodDto.getCreated_date());
-
-        food.setName(foodDto.getName());
-        food.setDescription(foodDto.getDescription());
-        food.setCategory(foodDto.getCategory());
-        food.setPrice(foodDto.getPrice());
-        food.setImage(foodDto.getImage());
-        food.setCreated_date(foodDto.getCreated_date());
-
-        foodRepository.save(food);
+        food.setName(foodRequestDto.getName());
+        food.setDescription(foodRequestDto.getDescription());
+        food.setCategory(foodRequestDto.getCategory());
+        food.setPrice(foodRequestDto.getPrice());
+        if(foodRequestDto.getImage() != null && !foodRequestDto.getImage().isBlank()){
+            food.setImage(foodRequestDto.getImage());
+        }
+        Food savedFood = foodRepository.save(food);
+        return convertToResponseFoodDto(savedFood);
     }
 
-    public void deleteFood(String id){
-        Food food = foodRepository.findById(id).orElseThrow(()->new ResourceNotFountException("Food not found for this "+ id));
-
+    public FoodResponseDto deleteFood(String id){
+        Food food = foodRepository.findById(id).orElseThrow(()->new ResourceNotFountException("Food not found for this id:"+ id));
+        FoodResponseDto foodResponseDto = convertToResponseFoodDto(food);
         foodRepository.delete(food);
+        return foodResponseDto;
     }
 
-    public Map<String, Object> getAllFoods(){
+    public List<FoodResponseDto> getAllFoods(){
         List<Food> foodList = foodRepository.findAll();
-        List<FoodDto> foodDtoList  = foodList.stream().map(this::convertToFoodDto).toList();
-        Map<String, Object> response = new HashMap<>();
-        response.put("foods", foodDtoList);
-        return response;
+        List<FoodResponseDto> foodResponseDtoList = foodList.stream().map(this::convertToResponseFoodDto).toList();
+
+        return foodResponseDtoList;
     }
 
-    public FoodDto convertToFoodDto(Food food){
-        FoodDto foodDto = new FoodDto();
-        foodDto.setId(food.getId());
-        foodDto.setName(food.getName());
-        foodDto.setDescription(food.getDescription());
-        foodDto.setCategory(food.getCategory());
-        foodDto.setCreated_date(food.getCreated_date());
-        foodDto.setPrice(food.getPrice());
-        foodDto.setImage(food.getImage());
-        return foodDto;
-    }
+
 
 }

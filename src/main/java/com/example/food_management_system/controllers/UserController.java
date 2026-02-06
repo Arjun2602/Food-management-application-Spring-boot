@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -19,16 +21,36 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllUsers(){
+        List<UserResponseDto> userResponseDtoList =  userService.getAllUsers();
+        Map<String, Object> res = new HashMap<>();
+        res.put("users", userResponseDtoList);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("user/{id}")
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id){
+        UserResponseDto userResponseDto = userService.getUserById(id);
+        Map<String, Object> res = new HashMap<>();
+        res.put("user", userResponseDto);
+        return ResponseEntity.status(HttpStatus.FOUND).body(res);
+    }
+
     @PostMapping("/addUser")
-    public ResponseEntity<UserResponseDto> addUser(@RequestBody UserRequestDto userRequestDto){
+    public ResponseEntity<Map<String, Object>> addUser(@RequestBody UserRequestDto userRequestDto){
         UserResponseDto userResponseDto = userService.addUser(userRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDto);
+        Map<String, Object> res = new HashMap<>();
+        res.put("user",userRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
     @PutMapping("updateUser/{id}")
-    public ResponseEntity<UserResponseDto> updateuser(@PathVariable Long id, @RequestBody UserRequestDto userRequestDto){
-         UserResponseDto userResponseDto = userService.updateUser(id, userRequestDto);
-         return ResponseEntity.status(HttpStatus.OK).body(userResponseDto);
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody UserRequestDto userRequestDto){
+        UserResponseDto userResponseDto = userService.updateUser(id, userRequestDto);
+        Map<String, Object> res = new HashMap<>();
+        res.put("user",userResponseDto);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
     @DeleteMapping("deleteUser/{id}")
@@ -36,17 +58,4 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok().body("User "+ id+ " deleted");
     }
-
-    @GetMapping
-    public ResponseEntity<List<UserResponseDto>> getAllUsers(){
-        List<UserResponseDto> userResponseDtoList = userService.getAllUsers();
-        return ResponseEntity.ok(userResponseDtoList);
-    }
-
-    @GetMapping("user/{id}")
-    public User getUserById(@PathVariable Long id){
-        return userService.getUserById(id);
-    }
-
-
 }

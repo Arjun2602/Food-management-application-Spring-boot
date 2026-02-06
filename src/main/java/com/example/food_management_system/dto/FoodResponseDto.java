@@ -1,30 +1,25 @@
-package com.example.food_management_system.entity.mongodb;
+package com.example.food_management_system.dto;
 
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
-@Document(collection = "foods")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Food {
-    @Id
+public class FoodResponseDto {
+
     private String id;
     private String name;
     private String description;
     private String category;
     private Double price;
-    @CreatedDate
     private Date created_date;
     private String image;
-
 }
